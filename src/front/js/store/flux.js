@@ -19,7 +19,7 @@ const getState = ({ getStore, getActions, setStore }) => {
                         },
                         body: JSON.stringify({
                             "email": email,
-                            "Password": password
+                            "password": password
                         })
 
                     })

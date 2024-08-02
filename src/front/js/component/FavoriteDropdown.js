@@ -15,9 +15,9 @@ export const FavoriteDropdown = () => {
                     {favorites.length}
                 </span>
             </button>
-            <ul className="dropdown-menu dropdown-menu-end dropdown-menu-lg-start">
+            <ul className="dropdown-menu dropdown-menu-end dropdown-menu-start">
                 {favorites.length === 0 ? (
-                    <p className="text-center">... Empty</p>
+                    <p className="text-center">Empty</p>
                 ) : (
                     favorites.map((item, index) => {
                         console.log(item)

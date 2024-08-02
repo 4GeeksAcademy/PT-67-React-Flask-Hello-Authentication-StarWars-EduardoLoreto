@@ -33,13 +33,14 @@ export const ItemCard = ({ item, type }) => {
                 )}
             </div>
             <div className="card-footer d-flex justify-content-between">
+                console.log(item, type)
                 <Link to={`learn/${type}/${uid}`}>
                     <button className="btn btn-warning"> Info! </button>
                 </Link>
                 <button className="btn btn-outline-warning" onClick={() => actions.addFavorite({ ...item, type: type })}>
                     <i className="fa-solid fa-heart"></i>
                 </button>
-            </div>
+            </div>            
         </div >
     );
 }
