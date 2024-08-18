@@ -10,7 +10,13 @@ export const ItemCard = ({ item, type }) => {
 
     return (
         <div className="card container-fluid justify-content-center mb-5 gap-3 text-dark" style={{ width: "18rem" }}>
-            <img src={`https://starwars-visualguide.com/assets/img/${type}s/${uid}.jpg`} className="card-img-top img-fluid" alt={`${type}.img`} />
+            <img 
+                src={`https://starwars-visualguide.com/assets/img/${type}s/${uid}.jpg`} 
+                className="card-img-top img-fluid" 
+                alt={`${type}.img`} 
+                onError={(e) => e.target.src = "/path/to/fallback-image.jpg"} // Imagen alternativa si falla
+            />
+
             <div className="card-body img-fluid">
                 <h2 className="card-title"><strong>{properties.name}</strong></h2>
                 {type === "character" && (
@@ -32,9 +38,8 @@ export const ItemCard = ({ item, type }) => {
                     </>
                 )}
             </div>
-            <div className="card-footer d-flex justify-content-between">
-                console.log(item, type)
-                <Link to={`learn/${type}/${uid}`}>
+            <div className="card-footer d-flex justify-content-between">                
+                <Link to={`/learn/${type}/${uid}`}>
                     <button className="btn btn-warning"> Info! </button>
                 </Link>
                 <button className="btn btn-outline-warning" onClick={() => actions.addFavorite({ ...item, type: type })}>
