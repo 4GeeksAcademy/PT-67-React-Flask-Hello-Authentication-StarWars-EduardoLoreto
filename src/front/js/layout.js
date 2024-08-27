@@ -12,6 +12,7 @@ import injectContext from "./store/appContext";
 
 function Layout() {
     const basename = process.env.BASENAME || "";
+    
 
     return (
         <div>
