@@ -54,6 +54,31 @@ def protected():
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user()), 200
 
+# Signup -------------------------------------------------------------------------------------------
+
+@api.route('/signup', methods=['POST'])
+def signup():
+    body = request.json
+    email = body['email']
+    password = body['password']
+
+    if body is None:
+        return "El cuerpo de la solicitud es null", 400
+    if 'email' not in body:
+        return 'Debes especificar el email', 400
+    if 'password' not in body:
+        return 'Debes especificar una contraseña', 400
+
+    user = User(email = email, password = password, is_active = True)
+    db.session.add(user)
+    db.session.commit()
+
+    response_body = {
+        "msg": "User created!"
+    }
+
+    return jsonify(response_body), 200 
+
     
 # USER-----------------------------------------------------------------------------------------------
 
