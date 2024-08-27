@@ -1,16 +1,16 @@
 const getState = ({ getStore, getActions, setStore }) => {
 
-	return {
-		store: {
-			people: [],
-			planets: [],
-			vehicles: [],
-			favorites: []
-		},
+    return {
+        store: {
+            people: [],
+            planets: [],
+            vehicles: [],
+            favorites: []
+        },
 
-		actions: {
+        actions: {
 
-			login: async(email, password) => {
+            login: async(email, password) => {
                 try {
                     let response = await fetch("https://refactored-space-xylophone-9799xjp76g47hw6r-3001.app.github.dev/api/login", {
                         method: "POST",
@@ -21,72 +21,98 @@ const getState = ({ getStore, getActions, setStore }) => {
                             "email": email,
                             "password": password
                         })
+                    });
 
-                    })
-
-                    const data = await response.json()
+                    const data = await response.json();
                     localStorage.setItem("token", data.access_token);
-                    return true
+                    return true;
 
-                }   catch (error) {
-                    return false
+                } catch (error) {
+                    return false;
                 }
             },
 
+            signup: async (email, password) => {
+                try {
+                    let response = await fetch("https://refactored-space-xylophone-9799xjp76g47hw6r-3001.app.github.dev/api/signup", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ email, password })
+                    });
 
+                    const data = await response.json();
+                    if (response.ok) {
+                        localStorage.setItem("token", data.access_token);
+                        return true;
+                    } else {
+                        console.error("Signup failed", data.message);
+                        return false;
+                    }
+                } catch (error) {
+                    console.error("Error in signup:", error);
+                    return false;
+                }
+            },
 
-			getItems: () => {
-				const store = getStore();
-				const natures = ['people', 'planets', 'vehicles'];
+            getItems: () => {
+                const store = getStore();
+                const natures = ['people', 'planets', 'vehicles'];
 
-				natures.forEach(async (nature) => {
-					const url = `https://www.swapi.tech/api/${nature}`;
+                natures.forEach(async (nature) => {
+                    const url = `https://www.swapi.tech/api/${nature}`;
 
-					try {
-						const response = await fetch(`${url}`)
-						const data = await response.json()
+                    try {
+                        const response = await fetch(`${url}`);
+                        const data = await response.json();
 
-						data.results.forEach(async (item) => {
-							const responseTwo = await fetch(`${url}/${item.uid}`)
-							const dataTwo = await responseTwo.json()
+                        data.results.forEach(async (item) => {
+                            const responseTwo = await fetch(`${url}/${item.uid}`);
+                            const dataTwo = await responseTwo.json();
 
-							setStore({
-								[nature]: [...store[nature], dataTwo.result]
-							})
-						})
-					} 
-					catch (error) {console.log(error)}
-				})
-			},
+                            setStore({
+                                [nature]: [...store[nature], dataTwo.result]
+                            });
+                        });
+                    } catch (error) {
+                        console.log(error);
+                    }
+                });
+            },
 
+            addFavorite: (element) => {
+                const store = getStore();
+                const { favorites } = store;
+                const isFavorite = favorites.filter(item => item.properties.name === element.properties.name);
+                console.log(favorites);
 
-			addFavorite: (element) => {
-				const store = getStore();
-				const { favorites } = store
-				const isFavorite = favorites.filter(item => item.properties.name == element.properties.name);
-				console.log(favorites)
+                if (isFavorite.length === 0) {
+                    setStore({
+                        favorites: [...favorites, element]
+                    });
+                } else {
+                    console.log("ya existe");
+                }
+            },
 
-				if (isFavorite.length == 0) {
-					setStore({
-						favorites: [...favorites, element]
-					})
-				} else {
-					console.log("ya existe")
-				}
-			},
+            deleteFavorite: (element) => {
+                const store = getStore();
+                const { favorites } = store;
+                const unFavorite = favorites.filter(item => item.properties.name !== element.properties.name);
 
-			deleteFavorite: (element) => {
-				const store = getStore();
-				const { favorites } = store;
-				const unFavorite = favorites.filter(item => item.properties.name != element.properties.name);
+                setStore({
+                    favorites: unFavorite
+                });
+            },
 
-				setStore({
-					favorites: unFavorite
-				})
-			}
-
-		}
-	}
+            logout: () => {
+                // Elimina el token del localStorage
+                localStorage.removeItem("token");
+                // Aquí puedes hacer otras acciones de limpieza si es necesario
+            }
+        }
+    };
 };
 
 export default getState;

@@ -6,6 +6,10 @@ from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identi
 from api.models import db, User, People, Planets, Vehicles, UserFavorites
 from api.utils import generate_sitemap, APIException
 from flask_cors import CORS
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask import make_response
+from datetime import timedelta
+
 
 api = Blueprint('api', __name__)
 
@@ -26,15 +30,23 @@ def handle_hello():
 
 @api.route('/login', methods=['POST'])
 def login():
-    email = request.json.get('email', None)
-    password = request.json.get('password', None)
-    # Aquí deberías validar contra tu base de datos
-    users_query = User.query.filter_by(email=email, password=password).first()
-    if email != users_query.email or password != users_query.password:
-        return jsonify({"msg": "Bad username or password"}), 401
+    email = request.json.get('email')
+    password = request.json.get('password')
 
+    # Verifica si el usuario existe y si la contraseña es correcta
+    user = User.query.filter_by(email=email).first()
+    if user is None or not check_password_hash(user.password, password):
+        return jsonify({"msg": "Correo o contraseña incorrectos"}), 401
+
+    # Crea el token de acceso
     access_token = create_access_token(identity=email)
-    return jsonify(access_token=access_token), 200
+
+    # Configura la cookie HttpOnly
+    response = make_response(jsonify({"msg": "Inicio de sesión exitoso"}))
+    response.set_cookie('access_token', access_token, httponly=True, secure=True, max_age=3600)
+
+    return response, 200
+
 
 @api.route('/protected', methods=['GET'])
 @jwt_required()
@@ -45,23 +57,24 @@ def protected():
     
 # USER-----------------------------------------------------------------------------------------------
 
-#Create a User
 @api.route('/user', methods=['POST'])
 def create_user():
-    # Process the information coming from the client
     user_data = request.get_json()
 
-    # We create an instance without being recorded in the database
-    user = User()
-    user.firstName = user_data["firstName"]
-    user.lastName = user_data["lastName"]
-    user.email = user_data["email"]
+    # Verifica si los campos requeridos están presentes
+    if not (user_data.get("firstName") and user_data.get("lastName") and user_data.get("email") and user_data.get("password")):
+        return jsonify({'message': 'Todos los campos son obligatorios'}), 400
 
-    if not (user.name and user.last_name and user.email):
-        return jsonify({'message': 'All fields are required'}), 400
+    # Hashea la contraseña antes de guardarla en la base de datos
+    hashed_password = generate_password_hash(user_data["password"], method='sha256')
 
-    return jsonify({'message': 'User registered successfully'}), 201
+    # Crea una nueva instancia de User
+    user = User(first_name=user_data["firstName"], last_name=user_data["lastName"], email=user_data["email"], password=hashed_password)
 
+    db.session.add(user)
+    db.session.commit()
+
+    return jsonify({'message': 'Usuario registrado exitosamente'}), 201
 
 #Get all users
 @api.route('/users', methods=['GET'])
@@ -97,6 +110,15 @@ def get_one_user(user_id):
     }
 
     return jsonify(response_body), 200
+
+# Logout------------------------------------------------------------------------
+@api.route('/logout', methods=['POST'])
+@jwt_required()
+def logout():
+    response = jsonify({"msg": "Cierre de sesión exitoso"})
+    response.delete_cookie('access_token')
+    return response, 200
+
 
 #Returns ALL People
 @api.route('/people', methods=['GET'])
